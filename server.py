@@ -15,19 +15,17 @@ class socket_server:
             print('Socked not created check address and port number')
             sys.exit()
         self.server_sock.bind((self.host,self.port))
-        self.server_sock.listen(10)
+        self.server_sock.listen(100)
         self.server_sock.setblocking(1)
     def server_run(self):
         client_list = [self.server_sock]
-        w=[]
         nick_list =[]
-        new_=[]
         dic = {}
         while True:
-            read_list,write_list,error_list = select.select(client_list,w,[])
+            read_list,write_list,error_list = select.select(client_list,[],[])
             if self.server_sock in read_list:
                 connection ,address = self.server_sock.accept()
-                print('New_connection {} established',format(address))
+                print('New_connection {} established'.format(address))
                 nick_name = connection.recv(1024)
                 sys.stdout.flush()
                 nick_len = len(nick_name)
@@ -36,20 +34,19 @@ class socket_server:
                 connection.send(msg1)
                 connection.setblocking(0)
                 nick_list.append(nick_name)
-                clint = (connection,address)
                 client_list.append(connection)
                 dic [connection] = 1
             for client in read_list:
                 if client != self.server_sock:
                     try:
                         data = client.recv(1024)
-                        print(data)
+                        sys.stdout.flush()
                         if dic[client] == 1:
                             data = data.decode('utf-8')
-                            data1 = data.strip('NICK')
-                            print(data)
+                            data1 = data[5:]
+                            
                             if data[0:4] !='NICK':
-                                msg2 = 'Error occured in nick name format'
+                                msg2 = 'Error occured in nick name format it should be in NICK and nickname'
                                 msg2 = bytes(msg2,'utf-8')
                                 client.send(msg2)
                             else:
@@ -75,7 +72,8 @@ class socket_server:
                                     client.send(msg6)
                         else:
                             msg5 = data.decode('utf-8')
-                            msg7 = msg.strip('MSG')
+                            msg7 = msg5.strip('MSG')
+                            
                             if msg5[0:3] != 'MSG':
                                 data2 = 'Message should be send in MSG and text format'
                                 data2 = bytes(data2,'utf-8')
@@ -93,21 +91,33 @@ class socket_server:
                                         data3 = bytes(data3,'utf-8')
                                         client.send(data3)
                                     else:
-                                        for i in client_list:
-                                            if i!=self.server_sock and i!=client:
-                                                data5 = ('MSG' +" "+ data1+ " "+msg1)
-                                                data5 = bytes(data5,'utf-8')
-                                                i.send(data5)
-                                elif len(msg5) >256:
-                                    data = 'message should be less than 256 characters'
-                                    data = bytes(data,'utf-8')
-                                    client.send(data)
+                                        if msg7 ==' quit':
+                                            print("client has been disconnected {}".format(data1))
+                                            data4 = ('client' +' ' + data1+ 'is Disconnected')
+                                            data4 = bytes(data4,'utf-8')
+                                            for i in client_list:
+                                                if i!=self.server_sock and i!=client:
+                                                    i.send(data4)
+                                                elif i == client:
+                                                    client_list.remove(i)
+                                        else:
+                                            for i in client_list:
+                                                if i!=self.server_sock and i!=client:
+                                                    data5 = ('MSG' +" "+ data1+ " "+msg7)
+                                                    data5 = bytes(data5,'utf-8')
+                                                    i.send(data5)
+                                elif len(msg) >256:
+                                    data4 = 'message should be less than 256 characters'
+                                    data4 = bytes(data4,'utf-8')
+                                    client.send(data4)
                     except IOError:
                         continue
-                        
+        self.server_sock.close()                               
 def main():
     ser = socket_server(sys.argv[1],int(sys.argv[2]))
     ser.server_run()
 if __name__ == "__main__":
     main()
+
+
 
