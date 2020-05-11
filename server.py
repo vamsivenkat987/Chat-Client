@@ -92,9 +92,10 @@ class socket_server:
                                         client.send(data3)
                                     else:
                                         if msg7 ==' quit':
-                                            print("client has been disconnected {}".format(data1))
+                                            print("client {} has been disconnected".format(data1))
                                             data4 = ('client' +' ' + data1+ 'is Disconnected')
                                             data4 = bytes(data4,'utf-8')
+                                            client.send(data4)
                                             for i in client_list:
                                                 if i!=self.server_sock and i!=client:
                                                     i.send(data4)
