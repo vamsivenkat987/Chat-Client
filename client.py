@@ -20,7 +20,6 @@ class client_socket:
             sys.exit()
         try:
             self.client_sock.connect((self.host,self.port))
-            self.connected = (self.host,self.port)
             print('client connected')
         except socket.error :
             print('server not found')
@@ -33,16 +32,22 @@ class client_socket:
             try:
                 data = self.client_sock.recv(1024)
                 if (len(data)!=0):
-                    print(data)
+                    msg = data.decode('utf-8')
+                    print(msg)
                     time.sleep(0.1)
             except IOError:
                 continue
     def inputdata(self):
         try:
             data = input()
+            data1 = data.strip('MSG')
             data = bytes(data,'utf-8')
             try:
                 self.client_sock.send(data)
+                if data1 == ' quit':
+                    
+                    self.client_sock.close()
+                    sys.exit(1)
                 time.sleep(0.1)
             except:
                 pass
