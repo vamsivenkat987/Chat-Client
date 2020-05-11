@@ -45,7 +45,7 @@ class client_socket:
             try:
                 self.client_sock.send(data)
                 if data1 == ' quit':
-                    
+                    print("This client has been disconnected")
                     self.client_sock.close()
                     sys.exit(1)
                 time.sleep(0.1)
