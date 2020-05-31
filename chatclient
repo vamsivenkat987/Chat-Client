@@ -1,0 +1,67 @@
+#!/usr/bin/python3
+
+import socket
+import sys
+from _thread import *
+import select 
+import re 
+
+if len(sys.argv)!=3:
+    print("error:check input format")#ipaddress:portnumber
+    sys.exit()
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+msg1 = (sys.argv[1])
+msg2=msg1.split(':')
+address1=str(agent[0])
+portnumber=int(agent[1])
+nick=str(sys.argv[2])
+
+
+server.connect((address1, portnumber))
+
+first_msg=server.recv(2048).decode('utf-8')
+
+print(first_msg)
+
+nick = 'NICK ' + nick
+
+
+server.sendall(nick.encode('utf-8'))
+
+ok_msg=server.recv(2048).decode('utf-8')
+print(ok_msg)
+if ok_msg == "OK":
+    pass
+elif ok_msg == "error occured":
+    print('nickname should be 12 characters')
+    print('please check nick name')
+    sys.exit()
+    
+    
+
+
+
+while True:
+    socket_list=[sys.stdin, server]
+    
+
+    read_sockets,write_sockets,error_sockets=select.select(socket_list,[],[])
+    
+    for sockets in read_sockets:
+        if sockets == server:
+            message = sockets.recv(2048).decode('utf-8')
+            print(message)
+        else:
+            message=sys.stdin.readline()
+            
+            message = 'MSG '+ message
+            if message == '\n':
+                continue
+            else:
+                server.sendall(message.encode('utf-8'))
+                
+server.close()
+
