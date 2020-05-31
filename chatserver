@@ -1,0 +1,116 @@
+#!/usr/bin/python3
+
+import socket
+import sys
+from _thread import *
+import select 
+import re 
+
+if len(sys.argv)!=2:
+    print("error: check the input format ")#ipaddress:portnumber
+    sys.exit()
+
+server= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+msg1 = (sys.argv[1])
+msg2=msg1.split(':')
+address1=str(agent[0])
+portnumber=int(agent[1])
+server.bind((address1,portnumber))
+server.listen(100)
+print('socket created waitig for clients.........')
+c=[]
+c.append(server)
+
+def clientthread(connection,address):
+    while True:
+        
+        try:
+            nick=connection.recv(2048).decode('utf-8')
+            nick1=nick.strip('NICK ')
+            regex = re.compile('[@!#$%^&*()?/|}{~:]')
+            
+            if(regex.search(nick1) == None) and len(nick1)<=12 and 'NICK ' in nick :
+                connection.sendall('OK'.encode('utf-8'))
+                break
+            elif len(nick1) or regex.search(nick1) != None:
+                connection.sendall('Error occured in nick name format it should be in 12characters'.encode('utf-8'))
+            else:
+                connection.close()
+                print(address[0]+" client has been disconnected")
+                c.remove(connection)
+                del c[connection]
+                break
+        except :
+                break
+
+        
+
+    while True:
+        try:
+            if connection in c:
+                message = connection.recv(2048).decode('utf-8')
+                message1=message.strip('MSG ')
+                
+            
+                if not message:
+                    connection.close()
+                    print(address[0]+" client has been disconnected")
+                    c.remove(connection)
+                    break 
+
+                elif 'MSG ' not in message:
+                    connection.sendall('Error occured in message format'.encode('utf-8'))
+                else:
+
+                
+                    if len(message1)<=255 :
+                    
+                        flag=0
+                        for i in message1[:-1]:
+                            if ord(i)<31:
+                            
+                                flag = flag +1
+                            
+                            else:
+                                pass
+                    #else if and next elif        
+                        if flag != 0:
+                            connection.sendall('error in the control characters'.encode('utf-8'))
+                        else:
+                            message_to_send = 'MSG '+nick1+' ' + message1[:-1]
+                
+                            broadcasting(message_to_send,connection,nick1)
+                    elif len(message1) > 255 :
+                        connection.sendall('message length below 256 characters'.encode('utf-8'))
+                   
+                
+
+        except KeyboardInterrupt:
+            connection.close()
+            break
+
+def broadcasting(message,connection,nick1):
+    for sockets in c:
+        if sockets!= server:
+            try:
+                sockets.sendall(message.encode('utf-8'))
+            except KeyboardInterrupt:
+                    c.remove(sockets)
+                    break
+
+
+
+while True:
+    connection,address=server.accept()
+    
+    connection.sendall('Hello 1'.encode('utf-8'))
+    c.append(connection)
+    print(address[0]+" client has been connected")
+    
+    start_new_thread(clientthread,(connection,address))
+    
+
+connection.close()
+server.close()
+
