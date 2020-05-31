@@ -15,8 +15,8 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 msg1 = (sys.argv[1])
 msg2=msg1.split(':')
-address1=str(agent[0])
-portnumber=int(agent[1])
+address1=str(msg2[0])
+portnumber=int(msg2[1])
 nick=str(sys.argv[2])
 
 
